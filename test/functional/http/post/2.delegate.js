@@ -1,5 +1,6 @@
 'use strict';
 
+var _ = require('lodash');
 var node = require('../../../node');
 var shared = require('../../shared');
 var constants = require('../../../../helpers/constants');
@@ -158,7 +159,7 @@ describe('POST /api/transactions (type 2) register delegate', function () {
 
 			return sendTransactionPromise(transaction).then(function (res) {
 				node.expect(res).to.have.property('status').to.equal(400);
-				node.expect(res).to.have.nested.property('body.message').to.equal('Username already exists');
+				node.expect(res).to.have.nested.property('body.message').to.equal(['Username', account.username, 'already exists'].join(' '));
 				badTransactionsEnforcement.push(transaction);
 			});
 		});
@@ -186,86 +187,64 @@ describe('POST /api/transactions (type 2) register delegate', function () {
 		var secondTransactionId;
 		var validParams;
 
-		var stripTransactionsResults = function (results) {
-			return {
-				successFields:results.map(function (res) {
-					return res.body.success;
+		function stripTransactionsResults (results) {
+			strippedResults = {
+				statusFields: results.map(function (res) {
+					return res.status;
 				}),
 				errorFields: results.map(function (res) {
-					return res.body.error;
+					return res.body.message;
 				}).filter(function (error) {
 					return error;
 				}),
-				transactionsIds: results.map(function (res) {
-					return res.body.transaction;
+				transactionsIds: _.flatMap(results, function (res) {
+					return res.body.transactions;
 				}).filter(function (trs) {
 					return trs;
 				}).map(function (trs) {
 					return trs.id;
 				})
 			};
-		};
-		function postDelegate (params, done) {
-			transaction = node.lisk.delegate.createDelegate(params.secret, params.username);
-			return sendTransactionPromise(transaction).then(function (res) {
-				done(res.body);
-			});
+			return strippedResults;
 		}
 
-		function sendLISK (params, done) {
-			transaction = node.lisk.delegate.createDelegate(params.secret, params.username);
-			return creditAccountPromise(accountFormerDelegate.address, constants.fees.delegate).then(done);
-		}
-
-		function enrichRandomAccount (cb) {
+		function enrichRandomAccount () {
 			account = node.randomAccount();
 			validParams = {
 				secret: account.password,
 				username: account.username
 			};
-			sendLISK({
-				secret: node.gAccount.password,
-				amount: node.LISK,
-				recipientId: account.address
-			}, function (err, res) {
-				node.expect(res.body).to.have.property('success').to.be.ok;
-				node.expect(res.body).to.have.property('transactionId');
-				node.expect(res.body.transactionId).to.be.not.empty;
-				node.onNewBlock(cb);
+
+			var transaction = node.lisk.transaction.createTransaction(account.address, 4 * constants.fees.delegate, node.gAccount.password);
+			return sendTransactionPromise(transaction).then(function (res) {
+				node.expect(res).to.have.property('status').to.be.equal(200);
+				node.expect(res).to.have.nested.property('body.status').that.is.equal('Transaction(s) accepted');
+				return waitForConfirmations([transaction.id]);
 			});
 		}
 
-		var sendTwice = function (sendSecond, cb) {
-			node.async.series({
-				first: function (cb) {
-					return postDelegate(validParams, cb);
-				},
-				second: sendSecond
-			}, function (err, res) {
-				node.expect(res).to.have.deep.property('first.body.success').to.be.true;
-				node.expect(res).to.have.deep.property('second.body.success').to.be.true;
-				firstTransactionId = res.first.body.transaction.id;
-				secondTransactionId = res.second.body.transaction.id;
-				cb();
-			});
-		};
-
-		var getConfirmations = function (cb) {
-			return function () {
-				node.onNewBlock(function () {
-					node.async.series([
-						function (cb) {
-							return node.get('/api/transactions/get?id=' + firstTransactionId, cb);
-						},
-						function (cb) {
-							return node.get('/api/transactions/get?id=' + secondTransactionId, cb);
-						}
-					], function (err, results) {
-						strippedResults = stripTransactionsResults(results);
-						cb();
-					});
+		var delaySendingTransaction = function (delay) {
+			return function (transaction) {
+				return new node.Promise(function (res, rej) {
+					setTimeout(function () {
+						sendTransactionPromise(transaction).then(res).catch(rej);
+					}, delay);
 				});
 			};
+		};
+
+		var sendTwoAndConfirm = function (transaction1, transaction2, secondSendSchedule) {
+			debugger;
+			return node.Promise.all([
+				sendTransactionPromise(transaction1),
+				secondSendSchedule(transaction2)
+			]).then(function (results) {
+				node.expect(results).to.have.nested.property('0.status').to.equal(200);
+				node.expect(results).to.have.nested.property('0.body.status').to.equal('Transaction(s) accepted');
+				node.expect(results).to.have.nested.property('1.status').to.equal(200);
+				node.expect(results).to.have.nested.property('1.body.status').to.equal('Transaction(s) accepted');
+				return waitForConfirmations([transaction1.id, transaction2.id], 10, true).then(stripTransactionsResults);
+			});
 		};
 
 		describe('using same account', function () {
@@ -276,57 +255,51 @@ describe('POST /api/transactions (type 2) register delegate', function () {
 
 					var firstResponse;
 					var secondResponse;
+					var firstTransaction;
+					var secondTransaction;
 
-					before(enrichRandomAccount);
-
-					before(function (done) {
-						node.async.series({
-							first: function (cb) {
-								return postDelegate(validParams, cb);
-							},
-							second: function (cb) {
-								return postDelegate(validParams, cb);
-							}
-						}, function (err, res) {
-							if (err) {
-								return done(err);
-							}
-							firstResponse = res.first.body;
-							secondResponse = res.second.body;
-							done();
+					before(function () {
+						return enrichRandomAccount().then(function () {
+							firstTransaction = node.lisk.delegate.createDelegate(validParams.secret, validParams.username);
+							secondTransaction = node.lisk.delegate.createDelegate(validParams.secret, validParams.username);
+							return node.Promise.all([
+								sendTransactionPromise(firstTransaction),
+								sendTransactionPromise(secondTransaction)
+							]).then(function (results) {
+								firstResponse = results[0];
+								secondResponse = results[1];
+							});
 						});
 					});
 
 					it('first transaction should be ok', function () {
-						node.expect(firstResponse).to.have.property('transaction');
+						node.expect(firstResponse).to.have.property('status').to.equal(200);
+						node.expect(firstResponse).to.have.nested.property('body.status').to.equal('Transaction(s) accepted');
 					});
 
 					it('second transaction should fail', function () {
-						node.expect(secondResponse).to.have.property('error').equal('Transaction is already processed: ' + firstResponse.transaction.id);
+						node.expect(secondResponse).to.have.property('status').to.equal(400);
+						node.expect(secondResponse).to.have.nested.property('body.message').equal('Transaction is already processed: ' + firstTransaction.id);
 					});
 				});
 
 				describe('with different timestamp', function () {
 
-					before(enrichRandomAccount);
-
-					before(function (done) {
-						sendTwice(function (cb) {
-							setTimeout(function () {
-								return postDelegate(validParams, cb);
-							}, 1001);
-						}, getConfirmations(done));
-					});
-
-					it('should not confirm one transaction', function () {
-						node.expect(strippedResults.successFields).to.contain(false);
-						node.expect(strippedResults.errorFields).to.have.lengthOf(1).and.to.contain('Transaction not found');
+					var transactionWithoutDelay;
+					var transactionWithDelay;
+					before(function () {
+						return enrichRandomAccount()
+							.then(function () {
+								transactionWithoutDelay = node.lisk.delegate.createDelegate(validParams.secret, validParams.username);
+								transactionWithDelay = node.lisk.delegate.createDelegate(validParams.secret, validParams.username, null, -1000);
+								return sendTwoAndConfirm(transactionWithDelay, transactionWithoutDelay, sendTransactionPromise);
+							});
 					});
 
 					it('should confirm one transaction', function () {
-						node.expect(strippedResults.successFields).to.contain(true);
+						node.expect(strippedResults.statusFields).to.contain(200);
 						node.expect(strippedResults.transactionsIds).to.have.lengthOf(1);
-						node.expect([firstTransactionId, secondTransactionId]).and.to.contain(strippedResults.transactionsIds[0]);
+						node.expect([transactionWithDelay.id, transactionWithoutDelay.id]).and.to.contain(strippedResults.transactionsIds[0]);
 					});
 				});
 			});
@@ -334,28 +307,26 @@ describe('POST /api/transactions (type 2) register delegate', function () {
 			describe('with different usernames', function () {
 
 				var differentUsernameParams;
+				var transaction1;
+				var transaction2;
 
-				before(enrichRandomAccount);
-
-				before(function (done) {
-					differentUsernameParams = {
-						secret: account.password,
-						username: node.randomUsername()
-					};
-					sendTwice(function (cb) {
-						return postDelegate(differentUsernameParams, cb);
-					}, getConfirmations(done));
+				before(function () {
+					return enrichRandomAccount()
+						.then(function () {
+							differentUsernameParams = {
+								secret: account.password,
+								username: node.randomUsername()
+							};
+							transaction1 = node.lisk.delegate.createDelegate(differentUsernameParams.secret, differentUsernameParams.username);
+							transaction2 = node.lisk.delegate.createDelegate(validParams.secret, validParams.username);
+							return sendTwoAndConfirm(transaction1, transaction2, sendTransactionPromise);
+						});
 				});
 
-				it('should not confirm one transaction', function () {
-					node.expect(strippedResults.successFields).to.contain(false);
-					node.expect(strippedResults.errorFields).to.have.lengthOf(1).and.to.contain('Transaction not found');
-				});
-
-				it('should confirm one transaction', function () {
-					node.expect(strippedResults.successFields).to.contain(true);
+				it('should confirm only one transaction', function () {
+					node.expect(strippedResults.statusFields).to.contain(200);
 					node.expect(strippedResults.transactionsIds).to.have.lengthOf(1);
-					node.expect([firstTransactionId, secondTransactionId]).and.to.contain(strippedResults.transactionsIds[0]);
+					node.expect([transaction1.id, transaction2.id]).and.to.contain(strippedResults.transactionsIds[0]);
 				});
 			});
 		});
@@ -365,91 +336,64 @@ describe('POST /api/transactions (type 2) register delegate', function () {
 			var secondAccount;
 			var secondAccountValidParams;
 
-			var enrichSecondRandomAccount = function (cb) {
+			var enrichSecondRandomAccount = function () {
 				secondAccount = node.randomAccount();
 				secondAccountValidParams = {
 					secret: secondAccount.password,
 					username: secondAccount.username
 				};
-				sendLISK({
-					secret: node.gAccount.password,
-					amount: node.LISK,
-					recipientId: secondAccount.address
-				}, function (err, res) {
-					node.expect(res.body).to.have.property('success').to.be.ok;
-					node.expect(res.body).to.have.property('transactionId');
-					node.expect(res.body.transactionId).to.be.not.empty;
-					cb();
+
+				var transaction = node.lisk.transaction.createTransaction(secondAccount.address, 4 * constants.fees.delegate, node.gAccount.password);
+				return sendTransactionPromise(transaction).then(function (res) {
+					node.expect(res).to.have.property('status').to.equal(200);
+					node.expect(res).to.have.nested.property('body.status').to.equal('Transaction(s) accepted');
+					return waitForConfirmations([transaction.id]);
 				});
 			};
 
-			before(function (done) {
-				enrichSecondRandomAccount(function () {
-					enrichRandomAccount(done);
-				});
+			before(function () {
+				return node.Promise.all([enrichSecondRandomAccount(), enrichRandomAccount()]);
 			});
 
 			describe('using same username', function () {
 
-				before(function (done) {
+				var transaction1;
+				var transaction2;
+
+				before(function () {
 					secondAccountValidParams.username = validParams.username;
-					sendTwice(function (cb) {
-						return postDelegate(secondAccountValidParams, cb);
-					}, getConfirmations(done));
+					transaction1 = node.lisk.delegate.createDelegate(validParams.secret, validParams.username);
+					transaction2 = node.lisk.delegate.createDelegate(secondAccountValidParams.secret, secondAccountValidParams.username);
+					return sendTwoAndConfirm(transaction1, transaction2, sendTransactionPromise);
 				});
 
-				it('should not confirm one transaction', function () {
-					node.expect(strippedResults.successFields).to.contain(false);
-					node.expect(strippedResults.errorFields).to.have.lengthOf(1).and.to.contain('Transaction not found');
-				});
-
-				it('should confirm one transaction', function () {
-					node.expect(strippedResults.successFields).to.contain(true);
+				it('should confirm only one transaction', function () {
+					node.expect(strippedResults.statusFields).to.contain(200);
 					node.expect(strippedResults.transactionsIds).to.have.lengthOf(1);
-					node.expect([firstTransactionId, secondTransactionId]).and.to.contain(strippedResults.transactionsIds[0]);
+					node.expect([transaction1.id, transaction2.id]).and.to.contain(strippedResults.transactionsIds[0]);
 				});
 			});
 
 			describe('using different usernames', function () {
 
-				var firstConfirmedTransaction;
-				var secondConfirmedTransaction;
+				var transaction1;
+				var transaction2;
 
-				before(function (done) {
-					enrichSecondRandomAccount(function () {
-						enrichRandomAccount(done);
-					});
+				before(function () {
+					return enrichSecondRandomAccount().then(enrichRandomAccount);
 				});
 
-				before(function (done) {
-					sendTwice(function (cb) {
-						return postDelegate(secondAccountValidParams, cb);
-					}, function () {
-						node.onNewBlock(function () {
-							node.async.series({
-								firstConfirmedTransaction: function (cb) {
-									return node.get('/api/transactions/get?id=' + firstTransactionId, cb);
-								},
-								secondConfirmedTransaction: function (cb) {
-									return node.get('/api/transactions/get?id=' + secondTransactionId, cb);
-								}
-							}, function (err, res) {
-								firstConfirmedTransaction = res.firstConfirmedTransaction.body;
-								secondConfirmedTransaction = res.secondConfirmedTransaction.body;
-								done();
-							});
-						});
-					});
+				before(function () {
+					transaction1 = node.lisk.delegate.createDelegate(validParams.secret, validParams.username);
+					transaction2 = node.lisk.delegate.createDelegate(secondAccountValidParams.secret, secondAccountValidParams.username);
+					return sendTwoAndConfirm(transaction1, transaction2, sendTransactionPromise);
 				});
 
 				it('should successfully confirm both transactions', function () {
-					node.expect(firstConfirmedTransaction).to.have.deep.property('success').to.be.true;
-					node.expect(firstConfirmedTransaction).to.have.deep.property('transaction.id').to.be.equal(firstTransactionId);
-					node.expect(secondConfirmedTransaction).to.have.deep.property('success').to.be.true;
-					node.expect(secondConfirmedTransaction).to.have.deep.property('transaction.id').to.be.equal(secondTransactionId);
+					node.expect(strippedResults.statusFields).eql([200, 200]);
+					node.expect(strippedResults.transactionsIds).to.have.lengthOf(2).and.to.contain(transaction1.id, transaction2.id);
 				});
 			});
 		});
 	});
-
 });
