@@ -17,7 +17,7 @@ var sql = require('../sql/delegates.js');
 var transactionTypes = require('../helpers/transactionTypes.js');
 
 // Private fields
-var modules, library, self, __private = {}, shared = {};
+var modules, library, self, __private = {};
 
 __private.assetTypes = {};
 __private.loaded = false;
@@ -46,7 +46,7 @@ function Delegates (cb, scope) {
 		schema: scope.schema,
 		balancesSequence: scope.balancesSequence,
 		logic: {
-			transaction: scope.logic.transaction,
+			transaction: scope.logic.transaction
 		},
 		config: {
 			forging: {
@@ -54,10 +54,10 @@ function Delegates (cb, scope) {
 				force: scope.config.forging.force,
 				defaultKey: scope.config.forging.defaultKey,
 				access: {
-					whiteList: scope.config.forging.access.whiteList,
-				},
-			},
-		},
+					whiteList: scope.config.forging.access.whiteList
+				}
+			}
+		}
 	};
 	self = this;
 	__private.blockReward = new BlockReward();
@@ -69,7 +69,77 @@ function Delegates (cb, scope) {
 	);
 
 	setImmediate(cb, null, self);
-}	
+}
+
+// Private methods
+/**
+ * Gets delegate public keys sorted by vote descending.
+ * @private
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback} 
+ */
+__private.getKeysSortByVote = function (cb) {
+	modules.accounts.getAccounts({
+		isDelegate: 1,
+		sort: {'vote': -1, 'publicKey': 1},
+		limit: slots.delegates
+	}, ['publicKey'], function (err, rows) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+		return setImmediate(cb, null, rows.map(function (el) {
+			return el.publicKey;
+		}));
+	});
+};
+
+/**
+ * Gets delegate public keys from previous round, sorted by vote descending.
+ * @private
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback}
+ */
+__private.getDelegatesFromPreviousRound = function (cb) {
+	// ToDo: Get delegates from previous round - query doesn not exist
+	// library.db.query(sql.getDelegatesSnapshot, {limit: slots.delegates}).then(function (rows) {
+	// 	var delegatesPublicKeys = [];
+	// 	rows.forEach(function (row) {
+	// 		delegatesPublicKeys.push(row.publicKey.toString('hex'));
+	// 	});
+	// 	return setImmediate(cb, null, delegatesPublicKeys);
+	// }).catch(function (err) {
+	// 	library.logger.error(err.stack);
+	// 	return setImmediate(cb, 'getDelegatesSnapshot database query failed');
+	// });
+	return setImmediate(cb, 'getDelegatesSnapshot query not implemented');
+};
+
+/**
+
+ * Generates delegate list and checks if block generator publicKey
+ * matches delegate id.
+ * @param {block} block
+ * @param {function} source - Source function for get delegates
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback} error message | cb
+ */
+__private.validateBlockSlot = function (block, source, cb) {
+	self.generateDelegateList(function (err, activeDelegates) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+
+		var currentSlot = slots.getSlotNumber(block.timestamp);
+		var delegateId = activeDelegates[currentSlot % slots.delegates];
+
+		if (delegateId && block.generatorPublicKey === delegateId) {
+			return setImmediate(cb);
+		} else {
+			library.logger.error('Expected generator: ' + delegateId + ' Received generator: ' + block.generatorPublicKey);
+			return setImmediate(cb, 'Failed to verify slot: ' + currentSlot);
+		}
+	});
+};
 
 /**
  * Gets slot time and keypair.
@@ -80,19 +150,25 @@ function Delegates (cb, scope) {
  * @returns {setImmediateCallback} error | cb | object {time, keypair}.
  */
 __private.getBlockSlotData = function (slot, height, cb) {
-	var currentSlot = slot;
-	var lastSlot = slots.getLastSlot(currentSlot);
-
-	for (; currentSlot < lastSlot; currentSlot += 1) {
-		var delegate_pos = currentSlot % slots.delegates;
-		var delegate_id = __private.delegatesList[delegate_pos];
-
-		if (delegate_id && __private.keypairs[delegate_id]) {
-			return setImmediate(cb, null, {time: slots.getSlotTime(currentSlot), keypair: __private.keypairs[delegate_id]});
+	self.generateDelegateList(function (err, activeDelegates) {
+		if (err) {
+			return setImmediate(cb, err);
 		}
-	}
 
-	return setImmediate(cb, null, null);
+		var currentSlot = slot;
+		var lastSlot = slots.getLastSlot(currentSlot);
+
+		for (; currentSlot < lastSlot; currentSlot += 1) {
+			var delegate_pos = currentSlot % slots.delegates;
+			var delegateId = activeDelegates[delegate_pos];
+
+			if (delegateId && __private.keypairs[delegateId]) {
+				return setImmediate(cb, null, {time: slots.getSlotTime(currentSlot), keypair: __private.keypairs[delegateId]});
+			}
+		}
+
+		return setImmediate(cb, null, null);
+	});
 };
 
 /**
@@ -408,17 +484,41 @@ __private.loadDelegates = function (cb) {
 // Public methods
 
 /**
- * Get delegates list for current round.
+ * Gets delegate list based on input function by vote and changes order.
+ * @param {number} height
+ * @param {function} source - Source function for get delegates.
  * @param {function} cb - Callback function.
- * @returns {setImmediateCallback} err
+ * @returns {setImmediateCallback} err | truncated delegate list.
  */
 Delegates.prototype.generateDelegateList = function (cb) {
 	library.db.query(sql.delegateList).then(function (result) {
 		__private.delegatesList = result[0].list;
-		return setImmediate(cb);
+		return setImmediate(cb, null, __private.delegatesList);
 	}).catch(function (err) {
 		return setImmediate(cb, err);
 	});
+};
+
+/**
+ * Generates delegate list and checks if block generator public Key
+ * matches delegate id.
+ * @param {block} block
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback} error message | cb
+ */
+Delegates.prototype.validateBlockSlot = function (block, cb) {
+	__private.validateBlockSlot(block, __private.getKeysSortByVote, cb);
+};
+
+/**
+ * Generates delegate list and checks if block generator public Key
+ * matches delegate id - against previous round.
+ * @param {block} block
+ * @param {function} cb - Callback function.
+ * @returns {setImmediateCallback} error message | cb
+ */
+Delegates.prototype.validateBlockSlotAgainstPreviousRound = function (block, cb) {
+	__private.validateBlockSlot(block, __private.getDelegatesFromPreviousRound, cb);
 };
 
 /**
@@ -530,25 +630,6 @@ Delegates.prototype.fork = function (block, cause) {
 	library.db.none(sql.insertFork, fork).then(function () {
 		library.network.io.sockets.emit('delegates/fork', fork);
 	});
-};
-
-/**
- * Generates delegate list and checks if block generator public Key
- * matches delegate id.
- * @param {block} block
- * @param {function} cb - Callback function.
- * @returns {setImmediateCallback} error message | cb
- */
-Delegates.prototype.validateBlockSlot = function (block, cb) {
-	var currentSlot = slots.getSlotNumber(block.timestamp);
-	var delegate_id = __private.delegatesList[currentSlot % slots.delegates];
-
-	if (delegate_id && block.generatorPublicKey === delegate_id) {
-		return setImmediate(cb);
-	} else {
-		library.logger.error('Expected generator: ' + delegate_id + ' Received generator: ' + block.generatorPublicKey);
-		return setImmediate(cb, 'Failed to verify slot: ' + currentSlot);
-	}
 };
 
 // Events
