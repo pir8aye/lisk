@@ -67,7 +67,7 @@ __private.receiveBlock = function (block, cb) {
 	// Update last receipt
 	modules.blocks.lastReceipt.update();
 	// Start block processing - broadcast: true, saveBlock: true
-	modules.blocks.verify.processBlock(block, true, cb, true);
+	modules.blocks.verify.processBlock(block, true, true, cb);
 };
 
 /**
@@ -427,7 +427,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 	// Process single block
 	function processBlock (block, seriesCb) {
 		// Start block processing - broadcast: false, saveBlock: true
-		modules.blocks.verify.processBlock(block, false, function (err) {
+		modules.blocks.verify.processBlock(block, false, true, function (err) {
 			if (!err) {
 				// Update last valid block
 				lastValidBlock = block;
@@ -438,7 +438,7 @@ Process.prototype.loadBlocksFromPeer = function (peer, cb) {
 				library.logger.debug('Block processing failed', {id: id, err: err.toString(), module: 'blocks', block: block});
 			}
 			return seriesCb(err);
-		}, true);
+		});
 	}
 
 	async.waterfall([
@@ -506,7 +506,7 @@ Process.prototype.generateBlock = function (keypair, timestamp, cb) {
 		}
 
 		// Start block processing - broadcast: true, saveBlock: true
-		modules.blocks.verify.processBlock(block, true, cb, true);
+		modules.blocks.verify.processBlock(block, true, true, cb);
 	});
 };
 
