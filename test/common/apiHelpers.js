@@ -180,29 +180,40 @@ function getBlocks (params, cb) {
 	http.get(url, httpResponseCallbackHelper.bind(null, cb));
 }
 
-function waitForConfirmations (transactions, limitHeight) {
+function waitForConfirmations (transactions, limitHeight, returnConfirmedOnLimitExceed) {
 	limitHeight = limitHeight || 10;
+
+	var confirmedResponses;
 
 	function checkConfirmations (transactions) {
 		return node.Promise.all(transactions.map(function (transactionId) {
 			return getTransactionByIdPromise(transactionId);
-		})).then(function (res) {
-			return node.Promise.each(res, function (result) {
-				if (result.body.transactions.length === 0) {
-					throw Error('Transaction not confirmed');
-				}
+		})).then(function (result) {
+			confirmedResponses = result.filter(function (res) {
+				return res.body.transactions.length !== 0;
 			});
+
+			if (confirmedResponses.length < transactions.length) {
+				throw Error('Transaction not confirmed');
+			}
+
+			return confirmedResponses;
 		});
 	}
 
 	function waitUntilLimit (limit) {
-		if(limit == 0) {
+		if (limit === 0) {
+
+			if (returnConfirmedOnLimitExceed) {
+				return confirmedResponses;
+			}
+
 			throw new Error('Exceeded limit to wait for confirmations');
 		}
 		limit -= 1;
 
 		return waitForBlocks(1)
-			.then(function (){
+			.then(function () {
 				return checkConfirmations(transactions);
 			})
 			.catch(function () {
