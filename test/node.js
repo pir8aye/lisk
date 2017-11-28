@@ -15,7 +15,7 @@ var swaggerHelper = require('../helpers/swagger');
 
 // Requires
 node.bignum = require('../helpers/bignum.js');
-node.config = require('../config.json');
+node.config = require('./data/config.json');
 node.constants = require('../helpers/constants.js');
 node.dappCategories = require('../helpers/dappCategories.js');
 node.dappTypes = require('../helpers/dappTypes.js');
@@ -460,7 +460,7 @@ node.initApplication = function (cb, initScope) {
 				cb(null, node.config);
 			},
 			genesisblock: function (cb) {
-				var genesisblock = require('../genesisBlock.json');
+				var genesisblock = require('./data/genesisBlock.json');
 				cb(null, {block: genesisblock});
 			},
 

@@ -4,9 +4,9 @@ var async = require('async');
 var child_process = require('child_process');
 var popsicle = require('popsicle');
 
-var config = require('../../config.json');
+var config = require('../data/config.json');
 var database = require('../../helpers/database.js');
-var genesisblock = require('../genesisBlock.json');
+var genesisblock = require('../data/genesisBlock.json');
 var ed = require('../../helpers/ed.js');
 var z_schema = require('../../helpers/z_schema.js');
 
