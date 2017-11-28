@@ -1,7 +1,7 @@
 'use strict';
 
 var node = require('../node');
-var typesRepresentatives = require('../common/typesRepresentatives');
+var typesRepresentatives = require('../fixtures/typesRepresentatives');
 
 var sendTransactionPromise = require('../common/apiHelpers').sendTransactionPromise;
 var getTransactionsPromise = require('../common/apiHelpers').getTransactionsPromise;
