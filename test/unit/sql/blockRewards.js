@@ -4,7 +4,7 @@ var chai = require('chai');
 var expect = require('chai').expect;
 
 var node = require('../../node');
-var sql = require('../../sql/blockRewards.js');
+var sql = require('../sql/blockRewards.js');
 var constants = require('../../../helpers/constants.js');
 var DBSandbox = require('../../common/globalBefore').DBSandbox;
 var modulesLoader = require('../../common/modulesLoader');
