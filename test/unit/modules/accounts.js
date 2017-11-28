@@ -13,7 +13,7 @@ var expect = require('chai').expect;
 var constants = require('../../../helpers/constants.js');
 var AccountModule = require('../../../modules/accounts.js');
 var modulesLoader = require('../../common/modulesLoader');
-var DBSandbox = require('../../common/globalBefore').DBSandbox;
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
 
 var validAccount = {
 	username: 'genesis_100',

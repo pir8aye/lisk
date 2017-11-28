@@ -7,8 +7,8 @@ var sinon = require('sinon');
 var node = require('../../../node');
 var modulesLoader = require('../../../common/modulesLoader');
 var exceptions = require('../../../../helpers/exceptions.js');
-var clearDatabaseTable = require('../../../common/globalBefore').clearDatabaseTable;
-var DBSandbox = require('../../../common/globalBefore').DBSandbox;
+var clearDatabaseTable = require('../../../common/dbSandbox').clearDatabaseTable;
+var DBSandbox = require('../../../common/dbSandbox').DBSandbox;
 
 var crypto = require('crypto');
 var bson = require('../../../../helpers/bson.js');

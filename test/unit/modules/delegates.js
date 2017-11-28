@@ -4,7 +4,7 @@ var expect = require('chai').expect;
 
 var node = require('./../../node.js');
 var modulesLoader = require('./../../common/modulesLoader');
-var DBSandbox = require('./../../common/globalBefore.js').DBSandbox;
+var DBSandbox = require('./../../common/dbSandbox.js').DBSandbox;
 var genesisDelegates = require('../../data/genesisDelegates.json');
 
 describe('delegates', function () {

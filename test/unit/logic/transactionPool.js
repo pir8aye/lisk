@@ -5,7 +5,7 @@ var sinon = require('sinon');
 
 var node = require('../../node');
 
-var DBSandbox = require('../../common/globalBefore').DBSandbox;
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
 var jobsQueue = require('../../../helpers/jobsQueue');
 var TransactionPool = require('../../../logic/transactionPool');
 var modulesLoader = require('../../common/modulesLoader');

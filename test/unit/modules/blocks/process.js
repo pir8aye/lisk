@@ -7,8 +7,8 @@ var node = require('../../../node');
 var modulesLoader = require('../../../common/modulesLoader');
 var genesisBlock = require('../../../data/genesisBlock.json');
 var loadTables = require('./processTablesData.json');
-var clearDatabaseTable = require('../../../common/globalBefore').clearDatabaseTable;
-var DBSandbox = require('../../../common/globalBefore').DBSandbox;
+var clearDatabaseTable = require('../../../common/dbSandbox').clearDatabaseTable;
+var DBSandbox = require('../../../common/dbSandbox').DBSandbox;
 
 describe('blocks/process', function () {
 

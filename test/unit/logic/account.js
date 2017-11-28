@@ -3,7 +3,7 @@
 var node = require('./../../node.js');
 var ed = require('../../../helpers/ed');
 var bignum = require('../../../helpers/bignum.js');
-var DBSandbox = require('../../common/globalBefore').DBSandbox;
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
 var constants = require('../../../helpers/constants.js');
 
 var crypto = require('crypto');

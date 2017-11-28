@@ -674,7 +674,7 @@ node.appCleanup = function (done) {
 };
 
 before(function (done) {
-	require('./common/globalBefore').waitUntilBlockchainReady(done);
+	require('./common/utils/wait').untilBlockchainReady(done);
 });
 
 // Exports

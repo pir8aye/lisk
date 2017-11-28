@@ -6,7 +6,7 @@ var expect = require('chai').expect;
 var node = require('../../node');
 var sql = require('../sql/blockRewards.js');
 var constants = require('../../../helpers/constants.js');
-var DBSandbox = require('../../common/globalBefore').DBSandbox;
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
 var modulesLoader = require('../../common/modulesLoader');
 
 function calcBlockReward (height, reward, done) {

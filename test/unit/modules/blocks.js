@@ -6,7 +6,7 @@ var expect = require('chai').expect;
 var express = require('express');
 var sinon = require('sinon');
 
-var DBSandbox = require('../../common/globalBefore').DBSandbox;
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
 var node = require('../../node');
 
 describe('blocks', function () {

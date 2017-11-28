@@ -8,7 +8,7 @@ var expect = require('chai').expect;
 var _  = require('lodash');
 
 var node = require('./../../node.js');
-var DBSandbox = require('../../common/globalBefore').DBSandbox;
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
 
 var ed = require('../../../helpers/ed');
 var diff = require('../../../helpers/diff.js');

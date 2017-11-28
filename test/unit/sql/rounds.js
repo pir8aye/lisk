@@ -15,7 +15,7 @@ var config = require('../../data/config.json');
 var constants = require('../../../helpers/constants');
 var node      = require('../../node.js');
 var slots     = require('../../../helpers/slots.js');
-var DBSandbox     = require('../../common/globalBefore').DBSandbox;
+var DBSandbox     = require('../../common/dbSandbox').DBSandbox;
 
 describe('Rounds-related SQL triggers', function () {
 
