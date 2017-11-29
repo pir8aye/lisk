@@ -11,6 +11,8 @@ var sendTransactionPromise = require('../../../common/apiHelpers').sendTransacti
 var sendSignaturePromise = require('../../../common/apiHelpers').sendSignaturePromise;
 var waitForConfirmations = require('../../../common/apiHelpers').waitForConfirmations;
 
+var randomUtil = require('../../../common/utils/random');
+
 describe('POST /api/transactions (type 4) register multisignature', function () {
 
 	var scenarios = {
@@ -398,7 +400,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('with not requested account should fail', function () {
-				signature = node.lisk.multisignature.signTransaction(scenarios.unsigned.transaction, node.randomAccount().password);
+				signature = node.lisk.multisignature.signTransaction(scenarios.unsigned.transaction, randomUtil.account().password);
 
 				return sendSignaturePromise(signature, scenarios.unsigned.transaction).then(function (res) {
 					node.expect(res).to.have.property('statusCode').to.equal(apiCodes.INTERNAL_SERVER_ERROR);

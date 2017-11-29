@@ -4,12 +4,16 @@ var expect = require('chai').expect;
 var async = require('async');
 
 var node = require('../../../node');
-var modulesLoader = require('../../../common/modulesLoader');
+
 var genesisBlock = require('../../../data/genesisBlock.json');
 var loadTables = require('./processTablesData.json');
+
+var modulesLoader = require('../../../common/modulesLoader');
 var clearDatabaseTable = require('../../../common/dbSandbox').clearDatabaseTable;
 var DBSandbox = require('../../../common/dbSandbox').DBSandbox;
 var application = require('../../../common/application');
+
+var constants = require('../../../../helpers/constants');
 
 describe('blocks/process', function () {
 
@@ -29,8 +33,8 @@ describe('blocks/process', function () {
 			modulesLoader.db = __db;
 			db = __db;
 			// Force rewards start at 150-th block
-			originalBlockRewardsOffset = node.constants.rewards.offset;
-			node.constants.rewards.offset = 150;
+			originalBlockRewardsOffset = constants.rewards.offset;
+			constants.rewards.offset = 150;
 			application.init(function (err, __scope) {
 				scope = __scope;
 				accounts = __scope.modules.accounts;
@@ -57,7 +61,7 @@ describe('blocks/process', function () {
 			if (err) {
 				done(err);
 			}
-			node.constants.rewards.offset = originalBlockRewardsOffset;
+			constants.rewards.offset = originalBlockRewardsOffset;
 			dbSandbox.destroy(modulesLoader.logger);
 			application.cleanup(done);
 		});

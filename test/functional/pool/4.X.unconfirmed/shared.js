@@ -10,6 +10,8 @@ var apiCodes = require('../../../../helpers/apiCodes');
 var sendTransactionPromise = require('../../../common/apiHelpers').sendTransactionPromise;
 var sendSignaturePromise = require('../../../common/apiHelpers').sendSignaturePromise;
 
+var randomUtil = require('../../../common/utils/random');
+
 function beforeValidationPhase (scenarios) {
 	var transactionsToWaitFor = [];
 
@@ -67,7 +69,7 @@ function beforeValidationPhaseWithDapp (scenarios) {
 			})
 			.then(function () {
 				return node.Promise.all(Object.keys(scenarios).map(function (type) {
-					scenarios[type].dapp = node.randomApplication();
+					scenarios[type].dapp = randomUtil.application();
 					var transaction = node.lisk.dapp.createDapp(scenarios[type].account.password, null, scenarios[type].dapp);
 					scenarios[type].dapp.id = transaction.id;
 					transactionsToWaitFor.push(transaction.id);

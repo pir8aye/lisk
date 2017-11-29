@@ -7,16 +7,18 @@ var _  = require('lodash');
 var chai = require('chai');
 var expect = require('chai').expect;
 
-var node = require('./../../node.js');
-var ed = require('../../../helpers/ed');
-var bignum = require('../../../helpers/bignum.js');
-var DBSandbox = require('../../common/dbSandbox').DBSandbox;
-var application = require('../../common/application');
-var transactionTypes = require('../../../helpers/transactionTypes');
-var constants = require('../../../helpers/constants.js');
+var node = require('./../../node');
 
 var modulesLoader = require('../../common/modulesLoader');
-var Transfer = require('../../../logic/transfer.js');
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
+
+var transactionTypes = require('../../../helpers/transactionTypes');
+var ed = require('../../../helpers/ed');
+var constants = require('../../../helpers/constants');
+var bignum = require('../../../helpers/bignum');
+
+var Transfer = require('../../../logic/transfer');
 
 var validPassword = 'robust weapon course unknown head trial pencil latin acid';
 var validKeypair = ed.makeKeypair(crypto.createHash('sha256').update(validPassword, 'utf8').digest());
@@ -142,7 +144,7 @@ describe('transfer', function () {
 		});
 
 		it('should return the correct fee when data field is not set', function () {
-			expect(transfer.calculateFee.call(transactionLogic, validTransaction)).to.equal(node.constants.fees.send);
+			expect(transfer.calculateFee.call(transactionLogic, validTransaction)).to.equal(constants.fees.send);
 		});
 
 		it('should return the correct fee when data field is set', function () {
@@ -151,7 +153,7 @@ describe('transfer', function () {
 				data: '0'
 			};
 
-			expect(transfer.calculateFee.call(transactionLogic, transaction)).to.equal(node.constants.fees.send + node.constants.fees.data);
+			expect(transfer.calculateFee.call(transactionLogic, transaction)).to.equal(constants.fees.send + constants.fees.data);
 		});
 	});
 

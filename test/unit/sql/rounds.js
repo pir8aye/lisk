@@ -21,6 +21,7 @@ var constants = require('../../../helpers/constants');
 var slots     = require('../../../helpers/slots.js');
 var DBSandbox     = require('../../common/dbSandbox').DBSandbox;
 var application = require('../../common/application');
+var randomUtil = require('../../common/utils/random');
 
 describe('Rounds-related SQL triggers', function () {
 
@@ -152,8 +153,8 @@ describe('Rounds-related SQL triggers', function () {
 		dbSandbox = new DBSandbox(node.config.db, 'lisk_test_sql_rounds');
 		dbSandbox.create(function (err, __db) {
 			// Force rewards start at 150-th block
-			originalBlockRewardsOffset = node.constants.rewards.offset;
-			node.constants.rewards.offset = 150;
+			originalBlockRewardsOffset = constants.rewards.offset;
+			constants.rewards.offset = 150;
 			application.init(function (err, scope) {
 				library = scope;
 				done(err);
@@ -162,7 +163,7 @@ describe('Rounds-related SQL triggers', function () {
 	});
 
 	after(function (done) {
-		node.constants.rewards.offset = originalBlockRewardsOffset;
+		constants.rewards.offset = originalBlockRewardsOffset;
 		dbSandbox.destroy();
 		application.cleanup(done);
 	});
@@ -578,8 +579,8 @@ describe('Rounds-related SQL triggers', function () {
 		it('should forge block with 1 TRANSFER transaction to random account, update mem_accounts (native) and delegates (trigger block_insert_delete) tables', function () {
 			var transactions = [];
 			var transaction = node.lisk.transaction.createTransaction(
-				node.randomAccount().address,
-				node.randomNumber(100000000, 1000000000),
+				randomUtil.account().address,
+				randomUtil.number(100000000, 1000000000),
 				node.gAccount.password
 			);
 			transactions.push(transaction);
@@ -593,8 +594,8 @@ describe('Rounds-related SQL triggers', function () {
 
 			for (var i = tx_cnt - 1; i >= 0; i--) {
 				var transaction = node.lisk.transaction.createTransaction(
-					node.randomAccount().address,
-					node.randomNumber(100000000, 1000000000),
+					randomUtil.account().address,
+					randomUtil.number(100000000, 1000000000),
 					node.gAccount.password
 				);
 				transactions.push(transaction);
@@ -613,8 +614,8 @@ describe('Rounds-related SQL triggers', function () {
 				var transactions = [];
 				for (var t = tx_cnt - 1; t >= 0; t--) {
 					var transaction = node.lisk.transaction.createTransaction(
-						node.randomAccount().address,
-						node.randomNumber(100000000, 1000000000),
+						randomUtil.account().address,
+						randomUtil.number(100000000, 1000000000),
 						node.gAccount.password
 					);
 					transactions.push(transaction);
@@ -795,7 +796,7 @@ describe('Rounds-related SQL triggers', function () {
 					.then(function () {
 						// Fund random account
 						var transactions = [];
-						tmp_account = node.randomAccount();
+						tmp_account = randomUtil.account();
 						var transaction = node.lisk.transaction.createTransaction(tmp_account.address, 5000000000, node.gAccount.password);
 						transactions.push(transaction);
 						return tickAndValidate(transactions);
