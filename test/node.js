@@ -395,9 +395,5 @@ node.randomPassword = function () {
 	return Math.random().toString(36).substring(7);
 };
 
-before(function (done) {
-	require('./common/utils/wait').untilBlockchainReady(done);
-});
-
 // Exports
 module.exports = node;
