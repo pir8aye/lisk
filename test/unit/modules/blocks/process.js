@@ -9,6 +9,7 @@ var genesisBlock = require('../../../data/genesisBlock.json');
 var loadTables = require('./processTablesData.json');
 var clearDatabaseTable = require('../../../common/dbSandbox').clearDatabaseTable;
 var DBSandbox = require('../../../common/dbSandbox').DBSandbox;
+var application = require('../../../common/application');
 
 describe('blocks/process', function () {
 
@@ -30,7 +31,7 @@ describe('blocks/process', function () {
 			// Force rewards start at 150-th block
 			originalBlockRewardsOffset = node.constants.rewards.offset;
 			node.constants.rewards.offset = 150;
-			node.initApplication(function (err, __scope) {
+			application.init(function (err, __scope) {
 				scope = __scope;
 				accounts = __scope.modules.accounts;
 				blocksProcess = __scope.modules.blocks.process;
@@ -58,7 +59,7 @@ describe('blocks/process', function () {
 			}
 			node.constants.rewards.offset = originalBlockRewardsOffset;
 			dbSandbox.destroy(modulesLoader.logger);
-			node.appCleanup(done);
+			application.cleanup(done);
 		});
 	});
 

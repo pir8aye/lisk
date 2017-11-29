@@ -14,6 +14,7 @@ var constants = require('../../../helpers/constants.js');
 var AccountModule = require('../../../modules/accounts.js');
 var modulesLoader = require('../../common/modulesLoader');
 var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 
 var validAccount = {
 	username: 'genesis_100',
@@ -54,7 +55,7 @@ describe('accounts', function () {
 	before(function (done) {
 		dbSandbox = new DBSandbox(modulesLoader.scope.config.db, 'lisk_test_accounts');
 		dbSandbox.create(function (err, __db) {
-			node.initApplication(function (err, __scope) {
+			application.init(function (err, __scope) {
 				// For correctly initializing setting blocks module
 				__scope.modules.blocks.lastBlock.set({height: 10});
 				accounts = __scope.modules.accounts;
@@ -66,7 +67,7 @@ describe('accounts', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	describe('constructor', function () {

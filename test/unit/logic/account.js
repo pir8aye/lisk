@@ -4,6 +4,7 @@ var node = require('./../../node.js');
 var ed = require('../../../helpers/ed');
 var bignum = require('../../../helpers/bignum.js');
 var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 var constants = require('../../../helpers/constants.js');
 
 var crypto = require('crypto');
@@ -61,7 +62,7 @@ describe('account', function () {
 	before(function (done) {
 		dbSandbox = new DBSandbox(node.config.db, 'lisk_test_logic_accounts');
 		dbSandbox.create(function (err, __db) {
-			node.initApplication(function (err, scope) {
+			application.init(function (err, scope) {
 				account = scope.logic.account;
 				done();
 			}, {db: __db});
@@ -70,7 +71,7 @@ describe('account', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	describe('Account', function () {

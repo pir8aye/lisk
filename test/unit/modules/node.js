@@ -5,6 +5,7 @@ var modulesLoader = require('./../../common/modulesLoader');
 var node = require('./../../node.js');
 var expect = require('chai').expect;
 var DBSandbox = require('./../../common/dbSandbox.js').DBSandbox;
+var application = require('../../common/application');
 
 describe('node', function () {
 
@@ -27,11 +28,11 @@ describe('node', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	before(function (done) {
-		node.initApplication(function (err, scope) {
+		application.init(function (err, scope) {
 			library = scope;
 
 			// Set delegates module as loaded to allow manual forging

@@ -16,6 +16,7 @@ var constants = require('../../../helpers/constants');
 var node      = require('../../node.js');
 var slots     = require('../../../helpers/slots.js');
 var DBSandbox     = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 
 describe('Rounds-related SQL triggers', function () {
 
@@ -149,7 +150,7 @@ describe('Rounds-related SQL triggers', function () {
 			// Force rewards start at 150-th block
 			originalBlockRewardsOffset = node.constants.rewards.offset;
 			node.constants.rewards.offset = 150;
-			node.initApplication(function (err, scope) {
+			application.init(function (err, scope) {
 				library = scope;
 				done(err);
 			}, {db: __db, waitForGenesisBlock: false});
@@ -159,7 +160,7 @@ describe('Rounds-related SQL triggers', function () {
 	after(function (done) {
 		node.constants.rewards.offset = originalBlockRewardsOffset;
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	afterEach(function () {

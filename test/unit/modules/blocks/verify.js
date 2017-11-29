@@ -9,6 +9,7 @@ var modulesLoader = require('../../../common/modulesLoader');
 var exceptions = require('../../../../helpers/exceptions.js');
 var clearDatabaseTable = require('../../../common/dbSandbox').clearDatabaseTable;
 var DBSandbox = require('../../../common/dbSandbox').DBSandbox;
+var application = require('../../../common/application');
 
 var crypto = require('crypto');
 var bson = require('../../../../helpers/bson.js');
@@ -235,7 +236,7 @@ describe('blocks/verify', function () {
 	});
 
 	before(function (done) {
-		node.initApplication(function (err, scope) {
+		application.init(function (err, scope) {
 			scope.modules.blocks.verify.onBind(scope.modules);
 			scope.modules.delegates.onBind(scope.modules);
 			scope.modules.transactions.onBind(scope.modules);

@@ -5,6 +5,8 @@ var expect = require('chai').expect;
 var node = require('./../../node.js');
 var modulesLoader = require('./../../common/modulesLoader');
 var DBSandbox = require('./../../common/dbSandbox.js').DBSandbox;
+var application = require('../../common/application');
+
 var genesisDelegates = require('../../data/genesisDelegates.json');
 
 describe('delegates', function () {
@@ -26,11 +28,11 @@ describe('delegates', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	before(function (done) {
-		node.initApplication(function (err, scope) {
+		application.init(function (err, scope) {
 			library = scope;
 
 			// Set delegates module as loaded to allow manual forging

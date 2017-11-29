@@ -6,8 +6,9 @@ var expect = require('chai').expect;
 var express = require('express');
 var sinon = require('sinon');
 
-var DBSandbox = require('../../common/dbSandbox').DBSandbox;
 var node = require('../../node');
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 
 describe('blocks', function () {
 	
@@ -136,7 +137,7 @@ describe('blocks', function () {
 	before(function (done) {
 		dbSandbox = new DBSandbox(node.config.db, 'lisk_test_modules_blocks');
 		dbSandbox.create(function (err, __db) {
-			node.initApplication(function (err, scope) {
+			application.init(function (err, scope) {
 				blocks = scope.modules.blocks;
 				done();
 			}, {db: __db});
@@ -145,7 +146,7 @@ describe('blocks', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	describe('getBlockProgressLogger', function () {

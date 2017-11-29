@@ -6,6 +6,7 @@ var sinon = require('sinon');
 var node = require('../../node');
 
 var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 var jobsQueue = require('../../../helpers/jobsQueue');
 var TransactionPool = require('../../../logic/transactionPool');
 var modulesLoader = require('../../common/modulesLoader');
@@ -23,7 +24,7 @@ describe('txPool', function () {
 				return done(err);
 			}
 			// Wait for genesisBlock transaction being applied
-			node.initApplication(function (err, scope) {
+			application.init(function (err, scope) {
 				// Init transaction logic
 				txPool = new TransactionPool(
 					modulesLoader.scope.config.broadcasts.broadcastInterval,
@@ -44,7 +45,7 @@ describe('txPool', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	beforeEach(function () {

@@ -11,6 +11,7 @@ var node = require('./../../node.js');
 var ed = require('../../../helpers/ed');
 var bignum = require('../../../helpers/bignum.js');
 var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 
 var transactionTypes = require('../../../helpers/transactionTypes');
 var slots = require('../../../helpers/slots');
@@ -142,7 +143,7 @@ describe('transaction', function () {
 		dbSandbox = new DBSandbox(node.config.db, 'lisk_test_logic_transactions');
 		dbSandbox.create(function (err, __db) {
 			db = __db;
-			node.initApplication(function (err, scope) {
+			application.init(function (err, scope) {
 				transactionLogic = scope.logic.transaction;
 				accountModule = scope.modules.accounts;
 				transfer.bind(accountModule);
@@ -154,7 +155,7 @@ describe('transaction', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	describe('attachAssetType', function () {

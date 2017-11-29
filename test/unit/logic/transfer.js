@@ -11,6 +11,7 @@ var node = require('./../../node.js');
 var ed = require('../../../helpers/ed');
 var bignum = require('../../../helpers/bignum.js');
 var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 var transactionTypes = require('../../../helpers/transactionTypes');
 var constants = require('../../../helpers/constants.js');
 
@@ -102,7 +103,7 @@ describe('transfer', function () {
 	before(function (done) {
 		dbSandbox = new DBSandbox(node.config.db, 'lisk_test_logic_transfer');
 		dbSandbox.create(function (err, __db) {
-			node.initApplication(function (err, scope) {
+			application.init(function (err, scope) {
 				accountModule = scope.modules.accounts;
 				transfer = new Transfer(modulesLoader.scope.logger, modulesLoader.scope.schema);
 				transferBindings = {
@@ -118,7 +119,7 @@ describe('transfer', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	describe('bind', function () {

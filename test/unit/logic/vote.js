@@ -9,6 +9,7 @@ var _  = require('lodash');
 
 var node = require('./../../node.js');
 var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 
 var ed = require('../../../helpers/ed');
 var diff = require('../../../helpers/diff.js');
@@ -127,7 +128,7 @@ describe('vote', function () {
 	before(function (done) {
 		dbSandbox = new DBSandbox(node.config.db, 'lisk_test_logic_vote');
 		dbSandbox.create(function (err, __db) {
-			node.initApplication(function (err, scope) {
+			application.init(function (err, scope) {
 				accountsModule = scope.modules.accounts;
 				delegatesModule = scope.modules.delegates;
 				vote = new Vote(modulesLoader.scope.logger, modulesLoader.scope.schema);
@@ -148,7 +149,7 @@ describe('vote', function () {
 
 	after(function (done) {
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	before(function (done) {

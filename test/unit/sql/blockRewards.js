@@ -7,6 +7,7 @@ var node = require('../../node');
 var sql = require('../sql/blockRewards.js');
 var constants = require('../../../helpers/constants.js');
 var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 var modulesLoader = require('../../common/modulesLoader');
 
 function calcBlockReward (height, reward, done) {
@@ -81,14 +82,14 @@ describe('BlockRewardsSQL @slow', function () {
 			originalBlockRewardsOffset = constants.rewards.offset;
 			constants.rewards.distance = 3000000;
 			constants.rewards.offset = 1451520;
-			node.initApplication(done, {db: db});
+			application.init(done, {db: db});
 		});
 	});
 
 	after(function (done) {
 		constants.rewards.offset = originalBlockRewardsOffset;
 		dbSandbox.destroy();
-		node.appCleanup(done);
+		application.cleanup(done);
 	});
 
 	describe('checking SQL function getBlockRewards()', function () {
