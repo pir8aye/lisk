@@ -10,6 +10,8 @@ var constants = require('../../helpers/constants');
 var waitFor = require('./utils/waitFor');
 var waitForBlocks = node.Promise.promisify(waitFor.blocks);
 
+var accountFixtures = require('../fixtures/accounts');
+
 var http = {
 	abstractRequest: function (options, done) {
 		var request = test.api[options.verb.toLowerCase()](options.path);
@@ -157,7 +159,7 @@ function sendSignature (signature, transaction, cb) {
 }
 
 function creditAccount (address, amount, cb) {
-	var transaction = lisk.transaction.createTransaction(address, amount, node.gAccount.password);
+	var transaction = lisk.transaction.createTransaction(address, amount, accountFixtures.genesis.password);
 	sendTransaction(transaction, cb);
 }
 

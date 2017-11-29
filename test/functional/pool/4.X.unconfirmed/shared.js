@@ -2,11 +2,12 @@
 
 var node = require('../../../node');
 var shared = require('../../shared');
+var accountFixtures = require('../../../fixtures/accounts');
+
+var apiCodes = require('../../../../helpers/apiCodes');
 
 var sendTransactionPromise = require('../../../common/apiHelpers').sendTransactionPromise;
 var waitForConfirmations = require('../../../common/apiHelpers').waitForConfirmations;
-var apiCodes = require('../../../../helpers/apiCodes');
-
 var sendTransactionPromise = require('../../../common/apiHelpers').sendTransactionPromise;
 var sendSignaturePromise = require('../../../common/apiHelpers').sendSignaturePromise;
 
@@ -21,7 +22,7 @@ function beforeValidationPhase (scenarios) {
 				return;
 			}
 
-			var transaction = node.lisk.transaction.createTransaction(scenarios[type].account.address, scenarios[type].amount, node.gAccount.password);
+			var transaction = node.lisk.transaction.createTransaction(scenarios[type].account.address, scenarios[type].amount, accountFixtures.genesis.password);
 			transactionsToWaitFor.push(transaction.id);
 
 			return sendTransactionPromise(transaction).then(function (res) {
@@ -56,7 +57,7 @@ function beforeValidationPhaseWithDapp (scenarios) {
 				return;
 			}
 
-			var transaction = node.lisk.transaction.createTransaction(scenarios[type].account.address, scenarios[type].amount, node.gAccount.password);
+			var transaction = node.lisk.transaction.createTransaction(scenarios[type].account.address, scenarios[type].amount, accountFixtures.genesis.password);
 			transactionsToWaitFor.push(transaction.id);
 
 			return sendTransactionPromise(transaction).then(function (res) {

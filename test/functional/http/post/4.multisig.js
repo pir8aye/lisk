@@ -4,6 +4,8 @@ require('../../functional.js');
 
 var node = require('../../../node');
 var shared = require('../../shared');
+var accountFixtures = require('../../../fixtures/accounts');
+
 var apiCodes = require('../../../../helpers/apiCodes');
 var constants = require('../../../../helpers/constants');
 
@@ -62,7 +64,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 				return;
 			}
 
-			var transaction = node.lisk.transaction.createTransaction(scenarios[type].account.address, scenarios[type].amount, node.gAccount.password);
+			var transaction = node.lisk.transaction.createTransaction(scenarios[type].account.address, scenarios[type].amount, accountFixtures.genesis.password);
 
 			return sendTransactionPromise(transaction).then(function (res) {
 				node.expect(res).to.have.property('status').to.equal(200);
@@ -90,7 +92,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('using empty member should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+' + node.eAccount.publicKey, '+' + scenarios.no_funds.account.publicKey, '+' + scenarios.minimal_funds.account.publicKey, null], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+' + accountFixtures.existingDelegate.publicKey, '+' + scenarios.no_funds.account.publicKey, '+' + scenarios.minimal_funds.account.publicKey, null], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);
@@ -100,7 +102,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('including sender should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+' + node.eAccount.publicKey, '+' + scenarios.regular.account.publicKey], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+' + accountFixtures.existingDelegate.publicKey, '+' + scenarios.regular.account.publicKey], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);
@@ -110,7 +112,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('using same member twice should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+' + node.eAccount.publicKey, '+' + node.eAccount.publicKey], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+' + accountFixtures.existingDelegate.publicKey, '+' + accountFixtures.existingDelegate.publicKey], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);
@@ -120,7 +122,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('using invalid publicKey should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+L' + node.eAccount.publicKey.slice(0, -1), '+' + scenarios.no_funds.account.publicKey], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['+L' + accountFixtures.existingDelegate.publicKey.slice(0, -1), '+' + scenarios.no_funds.account.publicKey], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);
@@ -130,7 +132,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('using no math operator (just publicKey) should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, [node.eAccount.publicKey, scenarios.no_funds.account.publicKey, scenarios.minimal_funds.account.publicKey], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, [accountFixtures.existingDelegate.publicKey, scenarios.no_funds.account.publicKey, scenarios.minimal_funds.account.publicKey], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);
@@ -150,7 +152,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('using invalid math operator should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['-' + node.eAccount.publicKey, '+' + scenarios.no_funds.account.publicKey], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['-' + accountFixtures.existingDelegate.publicKey, '+' + scenarios.no_funds.account.publicKey], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);
@@ -160,7 +162,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 			});
 
 			it('using duplicated correct operator should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['++' + node.eAccount.publicKey, '+' + scenarios.no_funds.account.publicKey], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, ['++' + accountFixtures.existingDelegate.publicKey, '+' + scenarios.no_funds.account.publicKey], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);
@@ -183,7 +185,7 @@ describe('POST /api/transactions (type 4) register multisignature', function () 
 		describe('min', function () {
 
 			it('using bigger than keysgroup size plus 1 should fail', function () {
-				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, [node.eAccount.publicKey], 1, 2);
+				transaction = node.lisk.multisignature.createMultisignature(scenarios.regular.account.password, null, [accountFixtures.existingDelegate.publicKey], 1, 2);
 
 				return sendTransactionPromise(transaction).then(function (res) {
 					node.expect(res).to.have.property('status').to.equal(400);

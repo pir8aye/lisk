@@ -2,12 +2,13 @@
 
 var expect = require('chai').expect;
 
-var node = require('./../../node.js');
-var modulesLoader = require('./../../common/modulesLoader');
-var DBSandbox = require('./../../common/dbSandbox.js').DBSandbox;
-var application = require('../../common/application');
-
+var node = require('../../node');
 var genesisDelegates = require('../../data/genesisDelegates.json');
+var accountFixtures = require('../../fixtures/accounts');
+
+var modulesLoader = require('../../common/modulesLoader');
+var DBSandbox = require('../../common/dbSandbox').DBSandbox;
+var application = require('../../common/application');
 
 describe('delegates', function () {
 
@@ -171,8 +172,8 @@ describe('delegates', function () {
 
 			it('should ignore secrets which do not belong to a delegate', function (done) {
 				config.forging.secret = [{
-					encryptedSecret: node.gAccount.encryptedSecret,
-					publicKey: node.gAccount.publicKey
+					encryptedSecret: accountFixtures.genesis.encryptedSecret,
+					publicKey: accountFixtures.genesis.publicKey
 				}];
 
 				loadDelegates(function (err) {
